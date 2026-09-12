@@ -193,6 +193,23 @@ const menuData = {
 let currentInvoiceData = null;
 let globalOrdersData = {};
 
+function renderCategory(containerId, items, prefix) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    items.forEach((item, index) => {
+        container.innerHTML += `
+            <div class="menu-item">
+                <div>
+                    <div><strong>${item.name}</strong></div>
+                    <small style="color: #777;">${item.price} ج/ك</small>
+                </div>
+                <input type="number" id="${prefix}-${index}" min="0" step="0.25" placeholder="كيلو">
+            </div>
+        `;
+    });
+}
+
 function initMenu() {
     renderCategory('menu-regular', menuData.regular, 'reg');
     renderCategory('menu-nz', menuData.nz, 'nz');
@@ -210,23 +227,6 @@ function initMenu() {
             `;
         });
     }
-}
-
-function renderCategory(containerId, items, prefix) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
-    items.forEach((item, index) => {
-        container.innerHTML += `
-            <div class="menu-item">
-                <div>
-                    <div><strong>${item.name}</strong></div>
-                    <small style="color: #777;">${item.price} ج/ك</small>
-                </div>
-                <input type="number" id="${prefix}-${index}" min="0" step="0.25" placeholder="كيلو">
-            </div>
-        `;
-    });
 }
 
 function showSection(sectionId) {
