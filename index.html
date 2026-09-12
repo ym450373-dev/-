@@ -26,7 +26,7 @@
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; max-height: 350px; overflow-y: auto; padding-left: 5px; }
         .menu-item { background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
         .menu-item input[type="number"] { width: 75px; padding: 6px; font-size: 14px; text-align: center; }
         
@@ -53,7 +53,6 @@
         <button class="btn btn-success" onclick="showSection('aggregate-orders'); loadAggregateSelection();">تجميع الأوردرات</button>
     </div>
 
-    <!-- قسم إضافة أوردر -->
     <div id="add-order" class="section active">
         <h2>بيانات العميل</h2>
         <div class="form-group">
@@ -73,8 +72,8 @@
             <input type="datetime-local" id="cust-delivery">
         </div>
 
-        <div id="menu-container">
-            <h3 style="margin-top: 20px; color:#6b4226; border-bottom: 2px solid #6b4226; padding-bottom: 5px;">الأنواع والشوكلاتات (سعر الكيلو)</h3>
+        <div id="menu-container" style="margin-top: 20px;">
+            <h3 style="color:#6b4226; border-bottom: 2px solid #6b4226; padding-bottom: 5px;">الأنواع والشوكلاتات (سعر الكيلو)</h3>
             <div class="menu-grid" id="menu-regular"></div>
 
             <h3 style="margin-top: 20px; color:#6b4226; border-bottom: 2px solid #6b4226; padding-bottom: 5px;">منيو الهيلثي - زبدة نيوزيلاندي (سعر الكيلو)</h3>
@@ -83,7 +82,6 @@
             <h3 style="margin-top: 20px; color:#6b4226; border-bottom: 2px solid #6b4226; padding-bottom: 5px;">منيو الهيلثي - زبدة فيرن (سعر الكيلو)</h3>
             <div class="menu-grid" id="menu-fern"></div>
 
-            <!-- قسم العلب المشكلة -->
             <div class="box-section">
                 <h3>إضافة علبة مشكل</h3>
                 <p style="font-size: 13px; color: #666; margin-bottom: 10px;">اختر الأصناف للعلبة وسيحسب السعر بناءً على متوسط الأسعار والوزن:</p>
@@ -96,29 +94,26 @@
                     <input type="number" id="box-count" value="1">
                 </div>
                 <label>الأصناف داخل العلبة:</label>
-                <div class="menu-grid" id="menu-box-items" style="max-height: 200px; overflow-y: auto;"></div>
+                <div class="menu-grid" id="menu-box-items" style="max-height: 200px;"></div>
             </div>
 
             <button type="button" class="btn btn-primary" style="margin-top: 20px; width: 100%; padding: 14px; font-size: 16px;" onclick="calculateInvoice()">حساب وسحب الفاتورة 📄</button>
         </div>
 
-        <!-- معاينة الفاتورة -->
         <div id="invoice-preview" class="invoice" style="display: none;">
             <h3>الفاتورة</h3>
             <div id="invoice-details"></div>
             <div id="invoice-items-list"></div>
             <h4 style="text-align: left; color: #c0392b; margin-top: 10px;" id="invoice-total"></h4>
-            <button type="button" class="btn btn-success" id="save-btn" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="saveOrder()">حفظ الأوردر 💾</button>
+            <button type="button" class="btn btn-success" id="save-btn" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="saveOrder()">حفظ الأوردر بالسحابة ☁️</button>
         </div>
     </div>
 
-    <!-- قسم الأوردرات المحفوظة -->
     <div id="saved-orders" class="section">
-        <h2>قائمة الأوردرات المحفوظة</h2>
+        <h2>قائمة الأوردرات المحفوظة (السحابية)</h2>
         <div id="orders-list-container" style="margin-top: 15px;"></div>
     </div>
 
-    <!-- قسم تجميع الأوردرات -->
     <div id="aggregate-orders" class="section">
         <h2>تجميع الكميات المطلوبة</h2>
         <p>اختر الأوردرات التي تريد تجميع إجمالي الأصناف والكميات لها:</p>
@@ -133,74 +128,96 @@
 </div>
 
 <script>
-    const FIREBASE_URL = "https://orders-system-26fd8-default-rtdb.firebaseio.com/orders";
+const FIREBASE_URL = "https://orders-system-26fd8-default-rtdb.firebaseio.com/orders";
 
-    const menuData = {
-        regular: [
-            { name: "بسكويت زبدة فانيليا", price: 270 },
-            { name: "بسكويت زبدة شوكولاتة", price: 270 },
-            { name: "بسكويت قرفة", price: 270 },
-            { name: "بسكويت قهوة", price: 360 },
-            { name: "بسكويت ميلكا", price: 380 },
-            { name: "كحك سادة", price: 270 },
-            { name: "كحك ملبن", price: 270 },
-            { name: "كحك عين جمل", price: 350 },
-            { name: "قراقيش سادة", price: 260 },
-            { name: "قراقيش عجوة", price: 260 },
-            { name: "معمول", price: 300 },
-            { name: "بيتي فور فانيليا", price: 320 },
-            { name: "بيتي فور شوكولاتة", price: 320 },
-            { name: "غريبة بالسمن البلدي", price: 470 },
-            { name: "تارت", price: 380 },
-            { name: "سابلية", price: 380 },
-            { name: "سابلية بونبون", price: 480 },
-            { name: "شوكولاتة رفايللو", price: 500 },
-            { name: "شوكولاتة روشية", price: 500 },
-            { name: "شوكولاتة سنيكرز", price: 400 },
-            { name: "جوزية", price: 400 },
-            { name: "بيمبو", price: 380 },
-            { name: "كوكيز فانيليا", price: 280 },
-            { name: "كوكيز شوكولاتة", price: 280 },
-            { name: "كوكيز حشوات", price: 380 },
-            { name: "دونـت", price: 100 }
-        ],
-        nz: [
-            { name: "بسكويت نسكافية (نيوزيلاندي)", price: 680 },
-            { name: "بسكويت بابيلز (نيوزيلاندي)", price: 620 },
-            { name: "بسكويت بيمبو (نيوزيلاندي)", price: 640 },
-            { name: "بسكويت شاتو (نيوزيلاندي)", price: 640 },
-            { name: "بسكويت سمسم بالعسل (نيوزيلاندي)", price: 620 },
-            { name: "كوكيز سوداني بالعسل (نيوزيلاندي)", price: 660 },
-            { name: "كوكيز قرفة بالزبيب (نيوزيلاندي)", price: 640 },
-            { name: "كوكيز قرفة عين جمل (نيوزيلاندي)", price: 720 },
-            { name: "كوكيز بدقيق البندق (نيوزيلاندي)", price: 860 },
-            { name: "كوكيز بدقيق اللوز (نيوزيلاندي)", price: 740 },
-            { name: "كوكيز جوز هند-زبيب-سمسم (نيوزيلاندي)", price: 640 },
-            { name: "كوكيز شوكلت شيبس (نيوزيلاندي)", price: 640 }
-        ],
-        fern: [
-            { name: "بسكويت نسكافية (فيرن)", price: 540 },
-            { name: "بسكويت ديدجيستيف (فيرن)", price: 580 },
-            { name: "بسكويت بابيلز (فيرن)", price: 480 },
-            { name: "بسكويت بيمبو (فيرن)", price: 500 },
-            { name: "بسكويت شاتو (فيرن)", price: 500 },
-            { name: "بسكويت سمسم بالعسل (فيرن)", price: 480 },
-            { name: "كوكيز سوداني بالعسل (فيرن)", price: 520 },
-            { name: "كوكيز قرفة بالزبيب (فيرن)", price: 500 },
-            { name: "كوكيز قرفة عين جمل (فيرن)", price: 580 },
-            { name: "كوكيز بدقيق البندق (فيرن)", price: 720 },
-            { name: "كوكيز بدقيق اللوز (فيرن)", price: 600 },
-            { name: "كوكيز جوز هند-زبيب-سمسم (فيرن)", price: 500 },
-            { name: "كوكيز شوكلت شيبس (فيرن)", price: 500 }
-        ]
-    };
+const menuData = {
+    regular: [
+        { name: "بسكويت زبدة فانيليا", price: 270 },
+        { name: "بسكويت زبدة شوكولاتة", price: 270 },
+        { name: "بسكويت قرفة", price: 270 },
+        { name: "بسكويت قهوة", price: 360 },
+        { name: "بسكويت ميلكا", price: 380 },
+        { name: "كحك سادة", price: 270 },
+        { name: "كحك ملبن", price: 270 },
+        { name: "كحك عين جمل", price: 350 },
+        { name: "قراقيش سادة", price: 260 },
+        { name: "قراقيش عجوة", price: 260 },
+        { name: "معمول", price: 300 },
+        { name: "بيتي فور فانيليا", price: 320 },
+        { name: "بيتي فور شوكولاتة", price: 320 },
+        { name: "غريبة بالسمن البلدي", price: 470 },
+        { name: "تارت", price: 380 },
+        { name: "سابلية", price: 380 },
+        { name: "سابلية بونبون", price: 480 },
+        { name: "شوكولاتة رفايللو", price: 500 },
+        { name: "شوكولاتة روشية", price: 500 },
+        { name: "شوكولاتة سنيكرز", price: 400 },
+        { name: "جوزية", price: 400 },
+        { name: "بيمبو", price: 380 },
+        { name: "كوكيز فانيليا", price: 280 },
+        { name: "كوكيز شوكولاتة", price: 280 },
+        { name: "كوكيز حشوات", price: 380 },
+        { name: "دونـت", price: 100 }
+    ],
+    nz: [
+        { name: "بسكويت نسكافية (نيوزيلاندي)", price: 680 },
+        { name: "بسكويت بابيلز (نيوزيلاندي)", price: 620 },
+        { name: "بسكويت بيمبو (نيوزيلاندي)", price: 640 },
+        { name: "بسكويت شاتو (نيوزيلاندي)", price: 640 },
+        { name: "بسكويت سمسم بالعسل (نيوزيلاندي)", price: 620 },
+        { name: "كوكيز سوداني بالعسل (نيوزيلاندي)", price: 660 },
+        { name: "كوكيز قرفة بالزبيب (نيوزيلاندي)", price: 640 },
+        { name: "كوكيز قرفة عين جمل (نيوزيلاندي)", price: 720 },
+        { name: "كوكيز بدقيق البندق (نيوزيلاندي)", price: 860 },
+        { name: "كوكيز بدقيق اللوز (نيوزيلاندي)", price: 740 },
+        { name: "كوكيز جوز هند-زبيب-سمسم (نيوزيلاندي)", price: 640 },
+        { name: "كوكيز شوكلت شيبس (نيوزيلاندي)", price: 640 }
+    ],
+    fern: [
+        { name: "بسكويت نسكافية (فيرن)", price: 540 },
+        { name: "بسكويت ديدجيستيف (فيرن)", price: 580 },
+        { name: "بسكويت بابيلز (فيرن)", price: 480 },
+        { name: "بسكويت بيمبو (فيرن)", price: 500 },
+        { name: "بسكويت شاتو (فيرن)", price: 500 },
+        { name: "بسكويت سمسم بالعسل (فيرن)", price: 480 },
+        { name: "كوكيز سوداني بالعسل (فيرن)", price: 520 },
+        { name: "كوكيز قرفة بالزبيب (فيرن)", price: 500 },
+        { name: "كوكيز قرفة عين جمل (فيرن)", price: 580 },
+        { name: "كوكيز بدقيق البندق (فيرن)", price: 720 },
+        { name: "كوكيز بدقيق اللوز (فيرن)", price: 600 },
+        { name: "كوكيز جوز هند-زبيب-سمسم (فيرن)", price: 500 },
+        { name: "كوكيز شوكلت شيبس (فيرن)", price: 500 }
+    ]
+};
 
-    let currentInvoiceData = null;
-    let globalOrdersData = {};
+let currentInvoiceData = null;
+let globalOrdersData = {};
 
-    function renderCategory(containerId, items, prefix) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = items.map((item, index) => `
+function initMenu() {
+    renderCategory('menu-regular', menuData.regular, 'reg');
+    renderCategory('menu-nz', menuData.nz, 'nz');
+    renderCategory('menu-fern', menuData.fern, 'fern');
+    
+    const allItems = [...menuData.regular, ...menuData.nz, ...menuData.fern];
+    const boxContainer = document.getElementById('menu-box-items');
+    if (boxContainer) {
+        boxContainer.innerHTML = '';
+        allItems.forEach((item) => {
+            boxContainer.innerHTML += `
+                <div class="menu-item">
+                    <span><input type="checkbox" class="box-item-check" data-name="${item.name}" data-price="${item.price}"> ${item.name}</span>
+                </div>
+            `;
+        });
+    }
+}
+
+function renderCategory(containerId, items, prefix) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    items.forEach((item, index) => {
+        container.innerHTML += `
             <div class="menu-item">
                 <div>
                     <div><strong>${item.name}</strong></div>
@@ -208,234 +225,261 @@
                 </div>
                 <input type="number" id="${prefix}-${index}" min="0" step="0.25" placeholder="كيلو">
             </div>
-        `).join('');
+        `;
+    });
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(sectionId).classList.add('active');
+}
+
+function calculateInvoice() {
+    const name = document.getElementById('cust-name').value;
+    const phone = document.getElementById('cust-phone').value;
+    const address = document.getElementById('cust-address').value;
+    const delivery = document.getElementById('cust-delivery').value;
+
+    if (!name) {
+        alert('برجاء إدخال اسم العميل أولاً');
+        return;
     }
 
-    function initMenu() {
-        renderCategory('menu-regular', menuData.regular, 'reg');
-        renderCategory('menu-nz', menuData.nz, 'nz');
-        renderCategory('menu-fern', menuData.fern, 'fern');
-        
-        const allItems = [...menuData.regular, ...menuData.nz, ...menuData.fern];
-        const boxContainer = document.getElementById('menu-box-items');
-        boxContainer.innerHTML = allItems.map((item) => `
-            <div class="menu-item">
-                <span><input type="checkbox" class="box-item-check" data-name="${item.name}" data-price="${item.price}"> ${item.name}</span>
-            </div>
-        `).join('');
+    let items = [];
+    let totalPrice = 0;
+
+    const processItems = (dataList, prefix) => {
+        dataList.forEach((item, idx) => {
+            const input = document.getElementById(`${prefix}-${idx}`);
+            const qty = input ? parseFloat(input.value) || 0 : 0;
+            if (qty > 0) {
+                const itemTotal = qty * item.price;
+                totalPrice += itemTotal;
+                items.push({ name: item.name, qty: qty, price: item.price, total: itemTotal });
+            }
+        });
+    };
+
+    processItems(menuData.regular, 'reg');
+    processItems(menuData.nz, 'nz');
+    processItems(menuData.fern, 'fern');
+
+    const boxChecks = document.querySelectorAll('.box-item-check:checked');
+    const boxWeight = parseFloat(document.getElementById('box-weight').value) || 0;
+    const boxCount = parseInt(document.getElementById('box-count').value) || 0;
+
+    if (boxChecks.length > 0 && boxWeight > 0 && boxCount > 0) {
+        let sumSelectedPrices = 0;
+        let selectedNames = [];
+
+        boxChecks.forEach(chk => {
+            sumSelectedPrices += parseFloat(chk.getAttribute('data-price'));
+            selectedNames.push(chk.getAttribute('data-name'));
+        });
+
+        const avgPricePerKg = sumSelectedPrices / boxChecks.length;
+        const singleBoxPrice = avgPricePerKg * boxWeight;
+        const totalBoxPrice = singleBoxPrice * boxCount;
+        totalPrice += totalBoxPrice;
+
+        const weightPerItemInOneBox = boxWeight / boxChecks.length;
+        const totalWeightPerItem = weightPerItemInOneBox * boxCount;
+
+        items.push({
+            name: `علبة مشكل (${boxCount} علبة - وزن العلبة ${boxWeight}ك)`,
+            qty: boxCount,
+            price: singleBoxPrice,
+            total: totalBoxPrice,
+            isBox: true,
+            boxDetails: selectedNames.map(n => ({ name: n, weightKg: totalWeightPerItem }))
+        });
     }
 
-    function showSection(sectionId) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(sectionId).classList.add('active');
+    if (items.length === 0) {
+        alert('برجاء تحديد كمية (كيلو) لصنف واحد على الأقل أو اختيار أصناف للعلبة المشكلة');
+        return;
     }
 
-    function calculateInvoice() {
-        const name = document.getElementById('cust-name').value;
-        const phone = document.getElementById('cust-phone').value;
-        const address = document.getElementById('cust-address').value;
-        const delivery = document.getElementById('cust-delivery').value;
+    currentInvoiceData = {
+        customer: { name, phone, address, delivery },
+        items: items,
+        totalPrice: totalPrice,
+        date: new Date().toLocaleString('ar-EG')
+    };
 
-        if (!name) {
-            alert('برجاء إدخال اسم العميل أولاً');
-            return;
+    let detailsHtml = `
+        <p><strong>اسم العميل:</strong> ${name}</p>
+        ${phone ? `<p><strong>التليفون:</strong> ${phone}</p>` : ''}
+        ${address ? `<p><strong>العنوان:</strong> ${address}</p>` : ''}
+        ${delivery ? `<p><strong>موعد التسليم:</strong> ${delivery}</p>` : ''}
+    `;
+
+    let itemsHtml = '<ul class="invoice-list">';
+    items.forEach(it => {
+        itemsHtml += `<li><span>${it.name} ${it.isBox ? '' : `(${it.qty} كيلو)`}</span> <span>${it.total} ج.م</span></li>`;
+    });
+    itemsHtml += '</ul>';
+
+    document.getElementById('invoice-details').innerHTML = detailsHtml;
+    document.getElementById('invoice-items-list').innerHTML = itemsHtml;
+    document.getElementById('invoice-total').innerText = `الإجمالي: ${totalPrice} جنيه مصري`;
+    document.getElementById('invoice-preview').style.display = 'block';
+}
+
+async function saveOrder() {
+    if (!currentInvoiceData) return;
+    const saveBtn = document.getElementById('save-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerText = "جاري الحفظ في السحابة...";
+
+    try {
+        const response = await fetch(`${FIREBASE_URL}.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentInvoiceData)
+        });
+
+        if (response.ok) {
+            alert('تم حفظ الأوردر بنجاح ووضعه على السحابة لجميع الموبايلات! 🎉');
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء الحفظ. يرجى التأكد من تفعيل Rules في Firebase إلى true.');
         }
+    } catch (err) {
+        alert('تعذر الاتصال بالسحابة: ' + err.message);
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "حفظ الأوردر بالسحابة ☁️";
+    }
+}
 
-        let items = [];
-        let totalPrice = 0;
+async function fetchOrdersFromCloud() {
+    try {
+        const response = await fetch(`${FIREBASE_URL}.json`);
+        const data = await response.json();
+        globalOrdersData = data || {};
+        return globalOrdersData;
+    } catch (err) {
+        console.error("Error fetching orders:", err);
+        return {};
+    }
+}
 
-        const processItems = (dataList, prefix) => {
-            dataList.forEach((item, idx) => {
-                const qty = parseFloat(document.getElementById(`${prefix}-${idx}`).value) || 0;
-                if (qty > 0) {
-                    const itemTotal = qty * item.price;
-                    totalPrice += itemTotal;
-                    items.push({ name: item.name, qty: qty, price: item.price, total: itemTotal });
+async function loadSavedOrders() {
+    const container = document.getElementById('orders-list-container');
+    container.innerHTML = '<div class="loading-text">جاري تحميل الأوردرات من السحابة... ⏳</div>';
+
+    const orders = await fetchOrdersFromCloud();
+    const keys = Object.keys(orders);
+
+    if (keys.length === 0) {
+        container.innerHTML = '<p>لا توجد أوردرات محفوظة في السحابة حالياً.</p>';
+        return;
+    }
+
+    let html = '';
+    let count = 1;
+    for (let key of keys) {
+        const ord = orders[key];
+        html += `
+            <div class="order-card">
+                <h3>أوردر #${count++} - ${ord.customer.name} (${ord.date})</h3>
+                <p>
+                    ${ord.customer.phone ? `<strong>التليفون:</strong> ${ord.customer.phone} | ` : ''}
+                    ${ord.customer.address ? `<strong>العنوان:</strong> ${ord.customer.address}` : ''}
+                </p>
+                ${ord.customer.delivery ? `<p><strong>التسليم:</strong> ${ord.customer.delivery}</p>` : ''}
+                <hr style="margin: 8px 0;">
+                <ul>
+        `;
+        ord.items.forEach(it => {
+            html += `<li>${it.name} - ${it.isBox ? '' : `${it.qty} ك - `}السعر: ${it.total} ج</li>`;
+        });
+        html += `
+                </ul>
+                <h4 style="margin-top: 8px; color: #6b4226;">الإجمالي: ${ord.totalPrice} ج.م</h4>
+                <button type="button" class="btn btn-danger" style="padding: 5px 10px; margin-top: 5px;" onclick="deleteOrder('${key}')">حذف الأوردر من السحابة</button>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
+async function deleteOrder(key) {
+    if (!confirm('هل أنت تأكد من حذف هذا الأوردر من كافة الموبايلات؟')) return;
+
+    try {
+        await fetch(`${FIREBASE_URL}/${key}.json`, { method: 'DELETE' });
+        loadSavedOrders();
+    } catch (err) {
+        alert('تعذر الحذف: ' + err.message);
+    }
+}
+
+async function loadAggregateSelection() {
+    const container = document.getElementById('aggregate-checkboxes');
+    container.innerHTML = '<div class="loading-text">جاري التحميل... ⏳</div>';
+
+    const orders = await fetchOrdersFromCloud();
+    const keys = Object.keys(orders);
+
+    if (keys.length === 0) {
+        container.innerHTML = '<p>لا توجد أوردرات محفوظة للتجميع.</p>';
+        return;
+    }
+
+    let html = '';
+    keys.forEach(key => {
+        const ord = orders[key];
+        html += `
+            <div style="margin-bottom: 8px;">
+                <label>
+                    <input type="checkbox" class="agg-check" value="${key}">
+                    أوردر العميل: <strong>${ord.customer.name}</strong> - (${ord.totalPrice} ج.م)
+                </label>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function calculateAggregation() {
+    const selectedKeys = Array.from(document.querySelectorAll('.agg-check:checked')).map(cb => cb.value);
+    
+    let totals = {};
+
+    selectedKeys.forEach(key => {
+        const ord = globalOrdersData[key];
+        if (ord && ord.items) {
+            ord.items.forEach(it => {
+                if (it.isBox && it.boxDetails) {
+                    it.boxDetails.forEach(bd => {
+                        totals[bd.name] = (totals[bd.name] || 0) + bd.weightKg;
+                    });
+                } else {
+                    totals[it.name] = (totals[it.name] || 0) + it.qty;
                 }
             });
-        };
-
-        processItems(menuData.regular, 'reg');
-        processItems(menuData.nz, 'nz');
-        processItems(menuData.fern, 'fern');
-
-        const boxChecks = document.querySelectorAll('.box-item-check:checked');
-        const boxWeight = parseFloat(document.getElementById('box-weight').value) || 0;
-        const boxCount = parseInt(document.getElementById('box-count').value) || 0;
-
-        if (boxChecks.length > 0 && boxWeight > 0 && boxCount > 0) {
-            let sumSelectedPrices = 0;
-            let selectedNames = [];
-
-            boxChecks.forEach(chk => {
-                sumSelectedPrices += parseFloat(chk.getAttribute('data-price'));
-                selectedNames.push(chk.getAttribute('data-name'));
-            });
-
-            const avgPricePerKg = sumSelectedPrices / boxChecks.length;
-            const singleBoxPrice = avgPricePerKg * boxWeight;
-            const totalBoxPrice = singleBoxPrice * boxCount;
-            totalPrice += totalBoxPrice;
-
-            const weightPerItemInOneBox = boxWeight / boxChecks.length;
-            const totalWeightPerItem = weightPerItemInOneBox * boxCount;
-
-            items.push({
-                name: `علبة مشكل (${boxCount} علبة - وزن العلبة ${boxWeight}ك)`,
-                qty: boxCount,
-                price: singleBoxPrice,
-                total: totalBoxPrice,
-                isBox: true,
-                boxDetails: selectedNames.map(n => ({ name: n, weightKg: totalWeightPerItem }))
-            });
         }
+    });
 
-        if (items.length === 0) {
-            alert('برجاء تحديد كمية (كيلو) لصنف واحد على الأقل أو اختيار أصناف للعلبة المشكلة');
-            return;
-        }
+    const resultList = document.getElementById('aggregate-list');
+    resultList.innerHTML = '';
 
-        currentInvoiceData = {
-            customer: { name, phone, address, delivery },
-            items: items,
-            totalPrice: totalPrice,
-            date: new Date().toLocaleString('ar-EG')
-        };
-
-        let detailsHtml = `
-            <p><strong>اسم العميل:</strong> ${name}</p>
-            ${phone ? `<p><strong>التليفون:</strong> ${phone}</p>` : ''}
-            ${address ? `<p><strong>العنوان:</strong> ${address}</p>` : ''}
-            ${delivery ? `<p><strong>موعد التسليم:</strong> ${delivery}</p>` : ''}
-        `;
-
-        let itemsHtml = '<ul class="invoice-list">';
-        items.forEach(it => {
-            itemsHtml += `<li><span>${it.name} ${it.isBox ? '' : `(${it.qty} كيلو)`}</span> <span>${it.total} ج.م</span></li>`;
-        });
-        itemsHtml += '</ul>';
-
-        document.getElementById('invoice-details').innerHTML = detailsHtml;
-        document.getElementById('invoice-items-list').innerHTML = itemsHtml;
-        document.getElementById('invoice-total').innerText = `الإجمالي: ${totalPrice} جنيه مصري`;
-        document.getElementById('invoice-preview').style.display = 'block';
+    if (Object.keys(totals).length === 0) {
+        alert('برجاء اختيار أوردر واحد على الأقل للتجميع');
+        return;
     }
 
-    async function saveOrder() {
-        if (!currentInvoiceData) return;
-        const saveBtn = document.getElementById('save-btn');
-        saveBtn.disabled = true;
-        saveBtn.innerText = "جاري حفظ الأوردر...";
-
-        try {
-            const response = await fetch(`${FIREBASE_URL}.json`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentInvoiceData)
-            });
-
-            if (response.ok) {
-                alert('تم حفظ الأوردر بنجاح! 🎉');
-                location.reload();
-            } else {
-                alert('حدث خطأ أثناء الحفظ.');
-            }
-        } catch (err) {
-            alert('تعذر الحفظ: ' + err.message);
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.innerText = "حفظ الأوردر 💾";
-        }
+    for (let [item, weight] of Object.entries(totals)) {
+        resultList.innerHTML += `<li><strong>${item}</strong>: المطلوب تجهيزه <strong>${weight.toFixed(2)} كيلو</strong></li>`;
     }
 
-    async function fetchOrdersFromCloud() {
-        try {
-            const response = await fetch(`${FIREBASE_URL}.json`);
-            const data = await response.json();
-            globalOrdersData = data || {};
-            return globalOrdersData;
-        } catch (err) {
-            console.error("Error fetching orders:", err);
-            return {};
-        }
-    }
+    document.getElementById('aggregate-result').style.display = 'block';
+}
 
-    async function loadSavedOrders() {
-        const container = document.getElementById('orders-list-container');
-        container.innerHTML = '<div class="loading-text">جاري تحميل الأوردرات... ⏳</div>';
+initMenu();
+</script>
 
-        const orders = await fetchOrdersFromCloud();
-        const keys = Object.keys(orders);
-
-        if (keys.length === 0) {
-            container.innerHTML = '<p>لا توجد أوردرات محفوظة حالياً.</p>';
-            return;
-        }
-
-        let html = '';
-        let count = 1;
-        for (let key of keys) {
-            const ord = orders[key];
-            html += `
-                <div class="order-card">
-                    <h3>أوردر #${count++} - ${ord.customer.name} (${ord.date})</h3>
-                    <p>
-                        ${ord.customer.phone ? `<strong>التليفون:</strong> ${ord.customer.phone} | ` : ''}
-                        ${ord.customer.address ? `<strong>العنوان:</strong> ${ord.customer.address}` : ''}
-                    </p>
-                    ${ord.customer.delivery ? `<p><strong>التسليم:</strong> ${ord.customer.delivery}</p>` : ''}
-                    <hr style="margin: 8px 0;">
-                    <ul>
-            `;
-            ord.items.forEach(it => {
-                html += `<li>${it.name} - ${it.isBox ? '' : `${it.qty} ك - `}السعر: ${it.total} ج</li>`;
-            });
-            html += `
-                    </ul>
-                    <h4 style="margin-top: 8px; color: #6b4226;">الإجمالي: ${ord.totalPrice} ج.م</h4>
-                    <button class="btn btn-danger" style="padding: 5px 10px; margin-top: 5px;" onclick="deleteOrder('${key}')">حذف الأوردر</button>
-                </div>
-            `;
-        }
-        container.innerHTML = html;
-    }
-
-    async function deleteOrder(key) {
-        if (!confirm('هل أنت تأكد من حذف هذا الأوردر؟')) return;
-
-        try {
-            await fetch(`${FIREBASE_URL}/${key}.json`, { method: 'DELETE' });
-            loadSavedOrders();
-        } catch (err) {
-            alert('تعذر الحذف: ' + err.message);
-        }
-    }
-
-    async function loadAggregateSelection() {
-        const container = document.getElementById('aggregate-checkboxes');
-        container.innerHTML = '<div class="loading-text">جاري التحميل... ⏳</div>';
-
-        const orders = await fetchOrdersFromCloud();
-        const keys = Object.keys(orders);
-
-        if (keys.length === 0) {
-            container.innerHTML = '<p>لا توجد أوردرات محفوظة للتجميع.</p>';
-            return;
-        }
-
-        let html = '';
-        keys.forEach(key => {
-            const ord = orders[key];
-            html += `
-                <div style="margin-bottom: 8px;">
-                    <label>
-                        <input type="checkbox" class="agg-check" value="${key}">
-                        أوردر العميل: <strong>${ord.customer.name}</strong> - (${ord.totalPrice} ج.م)
-                    </label>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    function 
+</body>
+</html>
