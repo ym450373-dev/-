@@ -105,12 +105,12 @@
             <div id="invoice-details"></div>
             <div id="invoice-items-list"></div>
             <h4 style="text-align: left; color: #c0392b; margin-top: 10px;" id="invoice-total"></h4>
-            <button type="button" class="btn btn-success" id="save-btn" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="saveOrder()">حفظ الأوردر 💾</button>
+            <button type="button" class="btn btn-success" id="save-btn" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="saveOrder()">حفظ الأوردر بالسحابة ☁️</button>
         </div>
     </div>
 
     <div id="saved-orders" class="section">
-        <h2>قائمة الأوردرات المحفوظة</h2>
+        <h2>قائمة الأوردرات المحفوظة ة</h2>
         <div id="orders-list-container" style="margin-top: 15px;"></div>
     </div>
 
@@ -330,7 +330,7 @@ async function saveOrder() {
     if (!currentInvoiceData) return;
     const saveBtn = document.getElementById('save-btn');
     saveBtn.disabled = true;
-    saveBtn.innerText = "جاري الحفظ...";
+    saveBtn.innerText = "جاري الحفظ/...";
 
     try {
         const response = await fetch(`${FIREBASE_URL}.json`, {
@@ -340,7 +340,7 @@ async function saveOrder() {
         });
 
         if (response.ok) {
-            alert('تم حفظ الأوردر بنجاح! 🎉');
+            alert('تم حفظ الأوردر بنجاح ! 🎉');
             location.reload();
         } else {
             alert('حدث خطأ أثناء الحفظ. يرجى التأكد من تفعيل Rules في Firebase إلى true.');
@@ -349,7 +349,7 @@ async function saveOrder() {
         alert('تعذر الاتصال: ' + err.message);
     } finally {
         saveBtn.disabled = false;
-        saveBtn.innerText = "حفظ الأوردر 💾";
+        saveBtn.innerText = "حفظ الأوردر  ☁️";
     }
 }
 
@@ -367,7 +367,7 @@ async function fetchOrdersFromCloud() {
 
 async function loadSavedOrders() {
     const container = document.getElementById('orders-list-container');
-    container.innerHTML = '<div class="loading-text">جاري تحميل الأوردرات... ⏳</div>';
+    container.innerHTML = '<div class="loading-text">جاري تحميل الأوردرات  ... ⏳</div>';
 
     const orders = await fetchOrdersFromCloud();
     const keys = Object.keys(orders);
@@ -398,7 +398,7 @@ async function loadSavedOrders() {
         html += `
                 </ul>
                 <h4 style="margin-top: 8px; color: #6b4226;">الإجمالي: ${ord.totalPrice} ج.م</h4>
-                <button type="button" class="btn btn-danger" style="padding: 5px 10px; margin-top: 5px;" onclick="deleteOrder('${key}')">حذف الأوردر</button>
+                <button type="button" class="btn btn-danger" style="padding: 5px 10px; margin-top: 5px;" onclick="deleteOrder('${key}')">حذف الأوردر </button>
             </div>
         `;
     }
@@ -406,7 +406,7 @@ async function loadSavedOrders() {
 }
 
 async function deleteOrder(key) {
-    if (!confirm('هل أنت تأكد من حذف هذا الأوردر؟')) return;
+    if (!confirm('هل أنت تأكد من حذف هذا الأوردر ؟')) return;
 
     try {
         await fetch(`${FIREBASE_URL}/${key}.json`, { method: 'DELETE' });
@@ -464,8 +464,4 @@ function calculateAggregation() {
     });
 
     const resultList = document.getElementById('aggregate-list');
-    resultList.innerHTML = '';
-
-    if (Object.keys(totals).length === 0) {
-        alert('برجاء اختيار أوردر واحد على الأقل للتجميع');
-        return
+    resultList
