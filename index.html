@@ -464,4 +464,22 @@ function calculateAggregation() {
     });
 
     const resultList = document.getElementById('aggregate-list');
-    resultList
+    resultList.innerHTML = '';
+
+    if (Object.keys(totals).length === 0) {
+        alert('برجاء اختيار أوردر واحد على الأقل للتجميع');
+        return;
+    }
+
+    for (let [item, weight] of Object.entries(totals)) {
+        resultList.innerHTML += `<li><strong>${item}</strong>: المطلوب تجهيزه <strong>${weight.toFixed(2)} كيلو</strong></li>`;
+    }
+
+    document.getElementById('aggregate-result').style.display = 'block';
+}
+
+initMenu();
+</script>
+
+</body>
+</html>
