@@ -47,14 +47,12 @@
 <div class="container">
     <h1>نظام الأوردرات</h1>
     
-    <!-- القائمة الرئيسية -->
     <div class="main-nav">
         <button class="btn btn-primary" onclick="showSection('add-order')">إضافة أوردر</button>
         <button class="btn btn-secondary" onclick="showSection('saved-orders'); loadSavedOrders();">الأوردرات المحفوظة</button>
         <button class="btn btn-success" onclick="showSection('aggregate-orders'); loadAggregateSelection();">تجميع الأوردرات</button>
     </div>
 
-    <!-- قسم 1: إضافة أوردر -->
     <div id="add-order" class="section active">
         <h2>بيانات العميل</h2>
         <div class="form-group">
@@ -74,20 +72,16 @@
             <input type="datetime-local" id="cust-delivery">
         </div>
 
-        <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 15px; padding: 14px; font-size: 16px;" onclick="toggleMenuSection()">▼ اختيار الأوردر / الأصناف</button>
-
-        <!-- قائمة الأصناف -->
-        <div id="menu-container" style="display: none; margin-top: 15px;">
-            <h3 style="color:#6b4226;">الأنواع والشوكلاتات (سعر الكيلو)</h3>
+        <div id="menu-container" style="margin-top: 20px;">
+            <h3 style="color:#6b4226; border-bottom: 2px solid #6b4226; padding-bottom: 5px;">الأنواع والشوكلاتات (سعر الكيلو)</h3>
             <div class="menu-grid" id="menu-regular"></div>
 
-            <h3 style="margin-top: 20px; color:#6b4226;">منيو الهيلثي - زبدة نيوزيلاندي (سعر الكيلو)</h3>
+            <h3 style="margin-top: 20px; color:#6b4226; border-bottom: 2px solid #6b4226; padding-bottom: 5px;">منيو الهيلثي - زبدة نيوزيلاندي (سعر الكيلو)</h3>
             <div class="menu-grid" id="menu-nz"></div>
 
-            <h3 style="margin-top: 20px; color:#6b4226;">منيو الهيلثي - زبدة فيرن (سعر الكيلو)</h3>
+            <h3 style="margin-top: 20px; color:#6b4226; border-bottom: 2px solid #6b4226; padding-bottom: 5px;">منيو الهيلثي - زبدة فيرن (سعر الكيلو)</h3>
             <div class="menu-grid" id="menu-fern"></div>
 
-            <!-- علبة مشكل -->
             <div class="box-section">
                 <h3>إضافة علبة مشكل</h3>
                 <p style="font-size: 13px; color: #666; margin-bottom: 10px;">اختر الأصناف للعلبة وسيحسب السعر بناءً على متوسط الأسعار والوزن:</p>
@@ -103,26 +97,23 @@
                 <div class="menu-grid" id="menu-box-items" style="max-height: 200px;"></div>
             </div>
 
-            <button type="button" class="btn btn-primary" style="margin-top: 15px; width: 100%; padding: 14px;" onclick="calculateInvoice()">حساب وسحب الفاتورة</button>
+            <button type="button" class="btn btn-primary" style="margin-top: 20px; width: 100%; padding: 14px; font-size: 16px;" onclick="calculateInvoice()">حساب وسحب الفاتورة 📄</button>
         </div>
 
-        <!-- المعاينة والفاتورة -->
         <div id="invoice-preview" class="invoice" style="display: none;">
             <h3>الفاتورة</h3>
             <div id="invoice-details"></div>
             <div id="invoice-items-list"></div>
             <h4 style="text-align: left; color: #c0392b; margin-top: 10px;" id="invoice-total"></h4>
-            <button type="button" class="btn btn-success" id="save-btn" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="saveOrder()">حفظ الأوردر بالسحابة ☁️</button>
+            <button type="button" class="btn btn-success" id="save-btn" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="saveOrder()">حفظ الأوردر 💾</button>
         </div>
     </div>
 
-    <!-- قسم 2: الأوردرات المحفوظة -->
     <div id="saved-orders" class="section">
-        <h2>قائمة الأوردرات المحفوظة (السحابية)</h2>
+        <h2>قائمة الأوردرات المحفوظة</h2>
         <div id="orders-list-container" style="margin-top: 15px;"></div>
     </div>
 
-    <!-- قسم 3: تجميع الأوردرات -->
     <div id="aggregate-orders" class="section">
         <h2>تجميع الكميات المطلوبة</h2>
         <p>اختر الأوردرات التي تريد تجميع إجمالي الأصناف والكميات لها:</p>
@@ -243,15 +234,6 @@ function showSection(sectionId) {
     document.getElementById(sectionId).classList.add('active');
 }
 
-function toggleMenuSection() {
-    const menu = document.getElementById('menu-container');
-    if (menu.style.display === 'none' || menu.style.display === '') {
-        menu.style.display = 'block';
-    } else {
-        menu.style.display = 'none';
-    }
-}
-
 function calculateInvoice() {
     const name = document.getElementById('cust-name').value;
     const phone = document.getElementById('cust-phone').value;
@@ -314,7 +296,7 @@ function calculateInvoice() {
     }
 
     if (items.length === 0) {
-        alert('برجاء اختيار صنف واحد على الأقل أو تحديد علبة مشكل');
+        alert('برجاء تحديد كمية (كيلو) لصنف واحد على الأقل أو اختيار أصناف للعلبة المشكلة');
         return;
     }
 
@@ -348,7 +330,7 @@ async function saveOrder() {
     if (!currentInvoiceData) return;
     const saveBtn = document.getElementById('save-btn');
     saveBtn.disabled = true;
-    saveBtn.innerText = "جاري الحفظ في السحابة...";
+    saveBtn.innerText = "جاري حفظ الأوردر...";
 
     try {
         const response = await fetch(`${FIREBASE_URL}.json`, {
@@ -358,16 +340,16 @@ async function saveOrder() {
         });
 
         if (response.ok) {
-            alert('تم حفظ الأوردر بنجاح ووضعه على السحابة لجميع الموبايلات!');
+            alert('تم حفظ الأوردر بنجاح! 🎉');
             location.reload();
         } else {
-            alert('حدث خطأ أثناء الحفظ. يرجى التأكد من الاتصال بالإنترنت.');
+            alert('حدث خطأ أثناء الحفظ.');
         }
     } catch (err) {
-        alert('تعذر الاتصال بالسحابة: ' + err.message);
+        alert('تعذر الحفظ: ' + err.message);
     } finally {
         saveBtn.disabled = false;
-        saveBtn.innerText = "حفظ الأوردر بالسحابة ☁️";
+        saveBtn.innerText = "حفظ الأوردر 💾";
     }
 }
 
@@ -385,13 +367,13 @@ async function fetchOrdersFromCloud() {
 
 async function loadSavedOrders() {
     const container = document.getElementById('orders-list-container');
-    container.innerHTML = '<div class="loading-text">جاري تحميل الأوردرات من السحابة... ⏳</div>';
+    container.innerHTML = '<div class="loading-text">جاري تحميل الأوردرات... ⏳</div>';
 
     const orders = await fetchOrdersFromCloud();
     const keys = Object.keys(orders);
 
     if (keys.length === 0) {
-        container.innerHTML = '<p>لا توجد أوردرات محفوظة في السحابة حالياً.</p>';
+        container.innerHTML = '<p>لا توجد أوردرات محفوظة حالياً.</p>';
         return;
     }
 
@@ -416,7 +398,7 @@ async function loadSavedOrders() {
         html += `
                 </ul>
                 <h4 style="margin-top: 8px; color: #6b4226;">الإجمالي: ${ord.totalPrice} ج.م</h4>
-                <button type="button" class="btn btn-danger" style="padding: 5px 10px; margin-top: 5px;" onclick="deleteOrder('${key}')">حذف الأوردر من السحابة</button>
+                <button type="button" class="btn btn-danger" style="padding: 5px 10px; margin-top: 5px;" onclick="deleteOrder('${key}')">حذف الأوردر</button>
             </div>
         `;
     }
@@ -424,7 +406,7 @@ async function loadSavedOrders() {
 }
 
 async function deleteOrder(key) {
-    if (!confirm('هل أنت تأكد من حذف هذا الأوردر من كافة الموبايلات؟')) return;
+    if (!confirm('هل أنت تأكد من حذف هذا الأوردر؟')) return;
 
     try {
         await fetch(`${FIREBASE_URL}/${key}.json`, { method: 'DELETE' });
@@ -489,18 +471,4 @@ function calculateAggregation() {
         return;
     }
 
-    for (let [item, weight] of Object.entries(totals)) {
-        resultList.innerHTML += `<li><strong>${item}</strong>: المطلوب تجهيزه <strong>${weight.toFixed(2)} كيلو</strong></li>`;
-    }
-
-    document.getElementById('aggregate-result').style.display = 'block';
-}
-
-// تشغيل القائمة عند استكمال تحميل الصفحة فوراً
-window.onload = function() {
-    initMenu();
-};
-</script>
-
-</body>
-</html>
+    for (let [item, weight] of Objec
