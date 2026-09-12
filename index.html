@@ -26,8 +26,8 @@
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; max-height: 350px; overflow-y: auto; padding-left: 5px; }
-        .menu-item { background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; min-height: 50px; max-height: 350px; overflow-y: auto; padding-left: 5px; }
+        .menu-item { background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .menu-item input[type="number"] { width: 75px; padding: 6px; font-size: 14px; text-align: center; }
         
         .box-section { background: #fff3e6; padding: 15px; border-radius: 8px; border: 1px dashed #d97724; margin-top: 15px; }
@@ -196,9 +196,9 @@ let globalOrdersData = {};
 function renderCategory(containerId, items, prefix) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.innerHTML = '';
+    let html = '';
     items.forEach((item, index) => {
-        container.innerHTML += `
+        html += `
             <div class="menu-item">
                 <div>
                     <div><strong>${item.name}</strong></div>
@@ -208,6 +208,7 @@ function renderCategory(containerId, items, prefix) {
             </div>
         `;
     });
+    container.innerHTML = html;
 }
 
 function initMenu() {
@@ -218,14 +219,15 @@ function initMenu() {
     const allItems = [...menuData.regular, ...menuData.nz, ...menuData.fern];
     const boxContainer = document.getElementById('menu-box-items');
     if (boxContainer) {
-        boxContainer.innerHTML = '';
+        let boxHtml = '';
         allItems.forEach((item) => {
-            boxContainer.innerHTML += `
+            boxHtml += `
                 <div class="menu-item">
                     <span><input type="checkbox" class="box-item-check" data-name="${item.name}" data-price="${item.price}"> ${item.name}</span>
                 </div>
             `;
         });
+        boxContainer.innerHTML = boxHtml;
     }
 }
 
@@ -468,7 +470,3 @@ function calculateAggregation() {
 
     if (Object.keys(totals).length === 0) {
         alert('برجاء اختيار أوردر واحد على الأقل للتجميع');
-        return;
-    }
-
-    for (let [item, weight] of Objec
