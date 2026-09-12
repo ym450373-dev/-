@@ -468,4 +468,39 @@ function calculateAggregation() {
 
     selectedKeys.forEach(key => {
         const ord = globalOrdersData[key];
-        if (ord && ord.item
+        if (ord && ord.items) {
+            ord.items.forEach(it => {
+                if (it.isBox && it.boxDetails) {
+                    it.boxDetails.forEach(bd => {
+                        totals[bd.name] = (totals[bd.name] || 0) + bd.weightKg;
+                    });
+                } else {
+                    totals[it.name] = (totals[it.name] || 0) + it.qty;
+                }
+            });
+        }
+    });
+
+    const resultList = document.getElementById('aggregate-list');
+    resultList.innerHTML = '';
+
+    if (Object.keys(totals).length === 0) {
+        alert('برجاء اختيار أوردر واحد على الأقل للتجميع');
+        return;
+    }
+
+    for (let [item, weight] of Object.entries(totals)) {
+        resultList.innerHTML += `<li><strong>${item}</strong>: المطلوب تجهيزه <strong>${weight.toFixed(2)} كيلو</strong></li>`;
+    }
+
+    document.getElementById('aggregate-result').style.display = 'block';
+}
+
+// تشغيل القائمة عند استكمال تحميل الصفحة فوراً
+window.onload = function() {
+    initMenu();
+};
+</script>
+
+</body>
+</html>
