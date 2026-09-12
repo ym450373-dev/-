@@ -170,8 +170,11 @@ const menuData = {
         { name: "كوكيز قرفة عين جمل (نيوزيلاندي)", price: 720 },
         { name: "كوكيز بدقيق البندق (نيوزيلاندي)", price: 860 },
         { name: "كوكيز بدقيق اللوز (نيوزيلاندي)", price: 740 },
-        { name: "كوكيز جوز هند-زبيب-سمسم (نيوزيلاندي)", price: 640 },
-        { name: "كوكيز شوكلت شيبس (نيوزيلاندي)", price: 640 }
+        { name: "كوكيز جوز هند(نيوزيلاندي)", price: 640 },
+        { name: "كوكيز سمسم(نيوزيلاندي)",price:640},
+        { name:"(نيوزيلاندي)كوكيز زبيب",price:640},
+        { name: "كوكيز شوكلت شيبس شوكولاتة (نيوزيلاندي)", price: 640 },
+        { name: "كوكيز شوكليت شيبس فانيليا (نيوزيلاندي)", price: 640}
     ],
     fern: [
         { name: "بسكويت نسكافية (فيرن)", price: 540 },
@@ -185,8 +188,11 @@ const menuData = {
         { name: "كوكيز قرفة عين جمل (فيرن)", price: 580 },
         { name: "كوكيز بدقيق البندق (فيرن)", price: 720 },
         { name: "كوكيز بدقيق اللوز (فيرن)", price: 600 },
-        { name: "كوكيز جوز هند-زبيب-سمسم (فيرن)", price: 500 },
-        { name: "كوكيز شوكلت شيبس (فيرن)", price: 500 }
+        { name: "كوكيز جوز هند(فيرن)", price: 500 },
+        { name: "كوكيز سمسم(فيرن)",price:500},
+        { name:"(فيرن)كوكيز زبيب",price:500},
+        { name: "كوكيز شوكلت شيبس شوكولاتة (فيرن)", price: 500 },
+        { name: "كوكيز شوكليت شيبس فانيليا (فيرن)", price: 500}
     ]
 };
 
@@ -454,7 +460,7 @@ function calculateAggregation() {
             ord.items.forEach(it => {
                 if (it.isBox && it.boxDetails) {
                     it.boxDetails.forEach(bd => {
-                        totals[bd.name] = (totals[bd.name] || 0) + bd.weightKg;
+   totals[bd.name] = (totals[bd.name] || 0) + bd.weightKg;
                     });
                 } else {
                     totals[it.name] = (totals[it.name] || 0) + it.qty;
@@ -482,4 +488,3 @@ initMenu();
 </script>
 
 </body>
-</html>
