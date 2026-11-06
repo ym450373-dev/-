@@ -107,7 +107,7 @@
 
             <div class="box-section">
                 <h3>📦 العلب المشكل</h3>
-                <p style="font-size: 13px; color: #666; margin-top: 5px;">كل علبة لوحدها: اختار الصنف واكتب وزنه بالكيلو (ربع كيلو = 0.25) وسيحسب السعر بسعر كيلو كل صنف.</p>
+                <p style="font-size: 13px; color: #666; margin-top: 5px;">لكل علبة: اكتب وزن العلبة كلها بالكيلو واختار أصنافها، والوزن بيتقسم عليهم بالتساوي والسعر بيتحسب بمتوسط أسعارهم.</p>
                 <div id="boxes-container"></div>
                 <button type="button" class="btn btn-secondary" style="margin-top: 12px; width: 100%;" onclick="addBox()">➕ إضافة علبة جديدة</button>
             </div>
@@ -222,10 +222,9 @@ const groups = [
     { key: 'nz', prefix: 'nz', label: 'هيلثي - نيوزيلاندي' },
     { key: 'fern', prefix: 'fern', label: 'هيلثي - فيرن' }
 ];
-
-let currentInvoiceData = null;
+    let currentInvoiceData = null;
 let globalOrdersData = {};
-let boxes = [];          // [{count, items:[{name, price, weightKg}]}]
+let boxes = [];
 let editingKey = null;
 
 function esc(s) {
@@ -263,7 +262,7 @@ function showSection(sectionId) {
     document.getElementById(sectionId).classList.add('active');
 }
 
-/* ---------- العلب المشكل (كل علبة بأصنافها وأوزانها) ---------- */
+/* ---------- العلب المشكل ---------- */
 function boxOptionsHtml() {
     let html = '';
     let idx = 0;
@@ -278,11 +277,20 @@ function boxOptionsHtml() {
     return html;
 }
 
-function boxPrice(box) {
-    return round2(box.items.reduce((s, it) => s + it.weightKg * it.price, 0));
+function round3(n) { return Math.round(n * 1000) / 1000; }
+function boxPerItemWeight(box) {
+    return box.items.length ? round3((box.weight || 0) / box.items.length) : 0;
 }
-function boxWeight(box) {
-    return round2(box.items.reduce((s, it) => s + it.weightKg, 0));
+function boxPrice(box) {
+    if (!box.items.length) return 0;
+    const avg = box.items.reduce((s, it) => s + it.price, 0) / box.items.length;
+    return round2(avg * (box.weight || 0));
+}
+function boxSummaryText(box) {
+    const one = boxPrice(box);
+    return `وزن الصنف الواحد: <strong>${boxPerItemWeight(box)} ك</strong> |
+        سعر العلبة: <strong>${one} ج</strong> |
+        الإجمالي (× ${box.count}): <strong>${round2(one * box.count)} ج</strong>`;
 }
 
 function renderBoxes() {
@@ -291,57 +299,72 @@ function renderBoxes() {
     const opts = boxOptionsHtml();
     let html = '';
     boxes.forEach((box, i) => {
-        const one = boxPrice(box);
+        const w = boxPerItemWeight(box);
         html += `
             <div class="box-card">
                 <div class="box-head">
                     <strong>📦 علبة ${i + 1}</strong>
-                    <span>
-                        <label style="font-size:13px;">عدد العلب المتطابقة:</label>
-                        <input type="number" class="count-input" min="1" value="${box.count}" onchange="setBoxCount(${i}, this.value)">
-                    </span>
                     <button type="button" class="btn btn-danger" style="padding:5px 10px;" onclick="removeBox(${i})">حذف العلبة</button>
                 </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 120px;">
+                        <label style="font-size:13px;">وزن العلبة كلها (كيلو):</label>
+                        <input type="number" class="count-input" style="width:100%;" min="0" step="0.05" value="${box.weight || ''}" placeholder="مثلاً 1" oninput="setBoxWeight(${i}, this.value)">
+                    </div>
+                    <div style="flex:1 1 120px;">
+                        <label style="font-size:13px;">عدد العلب:</label>
+                        <input type="number" class="count-input" style="width:100%;" min="1" value="${box.count}" oninput="setBoxCount(${i}, this.value)">
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
                 ${box.items.length === 0 ? '<p style="font-size:13px;color:#999;">لم يتم إضافة أصناف بعد</p>' : ''}
                 ${box.items.map((it, j) => `
                     <div class="box-row">
-                        <span>${esc(it.name)} — <strong>${it.weightKg} ك</strong> (${round2(it.weightKg * it.price)} ج)</span>
+                        <span>${esc(it.name)} — <strong>${w} ك</strong></span>
                         <button type="button" onclick="removeBoxItem(${i}, ${j})">✖</button>
                     </div>`).join('')}
+                </div>
                 <div class="box-add-row">
                     <select id="bsel-${i}">${opts}</select>
-                    <input type="number" id="bw-${i}" min="0" step="0.05" placeholder="الوزن (كيلو)">
-                    <button type="button" class="btn btn-primary" style="padding:8px 12px;" onclick="addBoxItem(${i})">إضافة</button>
+                    <button type="button" class="btn btn-primary" style="padding:8px 12px;" onclick="addBoxItem(${i})">إضافة صنف</button>
                 </div>
-                <p style="margin-top:8px;font-size:13px;color:#6b4226;">
-                    وزن العلبة: <strong>${boxWeight(box)} ك</strong> |
-                    سعر العلبة: <strong>${one} ج</strong> |
-                    الإجمالي (× ${box.count}): <strong>${round2(one * box.count)} ج</strong>
-                </p>
+                <p style="margin-top:8px;font-size:13px;color:#6b4226;" id="bsum-${i}">${boxSummaryText(box)}</p>
             </div>`;
     });
     c.innerHTML = html;
 }
 
-function addBox() { boxes.push({ count: 1, items: [] }); renderBoxes(); }
+function updateBoxSummary(i) {
+    const el = document.getElementById(`bsum-${i}`);
+    if (el) el.innerHTML = boxSummaryText(boxes[i]);
+}
+
+function addBox() { boxes.push({ count: 1, weight: 0, items: [] }); renderBoxes(); }
 function removeBox(i) { boxes.splice(i, 1); renderBoxes(); }
-function setBoxCount(i, v) { boxes[i].count = Math.max(1, parseInt(v) || 1); renderBoxes(); }
+function setBoxCount(i, v) { boxes[i].count = Math.max(1, parseInt(v) || 1); updateBoxSummary(i); }
+function setBoxWeight(i, v) { boxes[i].weight = parseFloat(v) || 0; updateBoxSummary(i); }
 function removeBoxItem(i, j) { boxes[i].items.splice(j, 1); renderBoxes(); }
 function addBoxItem(i) {
-    const w = parseFloat(document.getElementById(`bw-${i}`).value);
-    if (!(w > 0)) { alert('اكتب وزن الصنف بالكيلو'); return; }
     const it = allItems[parseInt(document.getElementById(`bsel-${i}`).value)];
-    boxes[i].items.push({ name: it.name, price: it.price, weightKg: w });
+    if (boxes[i].items.some(x => x.name === it.name)) { alert('الصنف ده موجود في العلبة بالفعل'); return; }
+    boxes[i].items.push({ name: it.name, price: it.price });
     renderBoxes();
 }
 
-/* أصناف العلبة من أوردر محفوظ (يدعم الأوردرات القديمة) */
+/* أصناف العلبة من أوردر محفوظ (يدعم الأوردرات القديمة) - الوزن لكل علبة واحدة */
 function boxItemsOf(it) {
-    if (it.box && it.box.items) return it.box.items.map(x => ({ name: x.name, price: x.price, weightKg: x.weightKg }));
+    if (it.box && it.box.items) {
+        const n = it.box.items.length || 1;
+        return it.box.items.map(x => ({
+            name: x.name,
+            price: x.price,
+            weightKg: it.box.weight ? round3(it.box.weight / n) : x.weightKg
+        }));
+    }
     const cnt = it.qty || 1;
     return (it.boxDetails || []).map(bd => {
         const found = allItems.find(a => a.name === bd.name);
-        return { name: bd.name, price: found ? found.price : 0, weightKg: round2(bd.weightKg / cnt) };
+        return { name: bd.name, price: found ? found.price : 0, weightKg: round3(bd.weightKg / cnt) };
     });
 }
 
@@ -392,18 +415,20 @@ function calculateInvoice() {
 
     for (let i = 0; i < boxes.length; i++) {
         const box = boxes[i];
+        if (!(box.weight > 0)) { alert(`اكتب وزن علبة ${i + 1} بالكيلو`); return; }
         if (box.items.length === 0) { alert(`علبة ${i + 1} فاضية، أضف لها أصناف أو احذفها`); return; }
         const one = boxPrice(box);
         const total = round2(one * box.count);
+        const perItem = boxPerItemWeight(box);
         totalPrice += total;
-       items.push({
-            name: `علبة مشكل ${i + 1} (${box.count} علبة - وزن العلبة ${boxWeight(box)}ك)`,
+        items.push({
+            name: `علبة مشكل ${i + 1} (${box.count} علبة - وزن العلبة ${box.weight}ك)`,
             qty: box.count,
             price: one,
             total: total,
             isBox: true,
-            box: { count: box.count, items: box.items.map(x => ({ name: x.name, price: x.price, weightKg: x.weightKg })) },
-            boxDetails: box.items.map(x => ({ name: x.name, weightKg: round2(x.weightKg * box.count) }))
+            box: { count: box.count, weight: box.weight, items: box.items.map(x => ({ name: x.name, price: x.price })) },
+            boxDetails: box.items.map(x => ({ name: x.name, weightKg: round3(perItem * box.count) }))
         });
     }
 
@@ -505,7 +530,12 @@ function editOrder(key) {
     boxes = [];
     (ord.items || []).forEach(it => {
         if (it.isBox) {
-            boxes.push({ count: it.qty || 1, items: boxItemsOf(it) });
+            const bi = boxItemsOf(it);
+            boxes.push({
+                count: it.qty || 1,
+                weight: (it.box && it.box.weight) ? it.box.weight : round3(bi.reduce((a, x) => a + x.weightKg, 0)),
+                items: bi.map(x => ({ name: x.name, price: x.price }))
+            });
         } else {
             groups.forEach(g => {
                 const idx = menuData[g.key].findIndex(m => m.name === it.name);
