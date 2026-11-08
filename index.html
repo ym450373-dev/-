@@ -112,6 +112,18 @@
                 <button type="button" class="btn btn-secondary" style="margin-top: 12px; width: 100%;" onclick="addBox()">➕ إضافة علبة جديدة</button>
             </div>
 
+            <div class="box-section" style="background:#eef7ff; border-color:#2980b9;">
+                <h3>➕ إضافة صنف جديد (مش في المنيو)</h3>
+                <p style="font-size: 13px; color: #666; margin: 5px 0 8px;">اكتب اسم الصنف وسعر الكيلو والكمية وهيتضاف للأوردر.</p>
+                <div class="box-add-row">
+                    <input type="text" id="custom-name" placeholder="اسم الصنف">
+                    <input type="number" id="custom-price" min="0" placeholder="سعر الكيلو">
+                    <input type="number" id="custom-qty" min="0" step="0.25" placeholder="الكمية (كيلو)">
+                    <button type="button" class="btn btn-primary" style="padding:8px 12px;" onclick="addCustomItem()">إضافة</button>
+                </div>
+                <div id="custom-items-list" style="margin-top:8px;"></div>
+            </div>
+
             <div class="form-group" style="margin-top: 20px;">
                 <label>📝 ملاحظات على الأوردر (اختياري)</label>
                 <textarea id="order-notes" placeholder="اكتب أي ملاحظات خاصة بالأوردر..."></textarea>
@@ -221,10 +233,10 @@ const groups = [
     { key: 'regular', prefix: 'reg', label: 'الأنواع والشوكلاتات' },
     { key: 'nz', prefix: 'nz', label: 'هيلثي - نيوزيلاندي' },
     { key: 'fern', prefix: 'fern', label: 'هيلثي - فيرن' }
-];
-    let currentInvoiceData = null;
+];let currentInvoiceData = null;
 let globalOrdersData = {};
 let boxes = [];
+let customItems = [];
 let editingKey = null;
 
 function esc(s) {
@@ -238,6 +250,7 @@ function initMenu() {
     renderCategory('menu-nz', menuData.nz, 'nz');
     renderCategory('menu-fern', menuData.fern, 'fern');
     renderBoxes();
+    renderCustomItems();
 }
 
 function renderCategory(containerId, items, prefix) {
@@ -261,6 +274,29 @@ function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(sectionId).classList.add('active');
 }
+
+/* ---------- أصناف إضافية (خارج المنيو) ---------- */
+function renderCustomItems() {
+    const c = document.getElementById('custom-items-list');
+    if (!c) return;
+    c.innerHTML = customItems.map((it, i) => `
+        <div class="box-row">
+            <span>${esc(it.name)} — ${it.qty} ك × ${it.price} ج = <strong>${round2(it.qty * it.price)} ج</strong></span>
+            <button type="button" onclick="removeCustomItem(${i})">✖</button>
+        </div>`).join('');
+}
+function addCustomItem() {
+    const name = document.getElementById('custom-name').value.trim();
+    const price = parseFloat(document.getElementById('custom-price').value);
+    const qty = parseFloat(document.getElementById('custom-qty').value);
+    if (!name) { alert('اكتب اسم الصنف'); return; }
+    if (!(price > 0)) { alert('اكتب سعر الكيلو'); return; }
+    if (!(qty > 0)) { alert('اكتب الكمية بالكيلو'); return; }
+    customItems.push({ name: name, price: price, qty: qty });
+    ['custom-name', 'custom-price', 'custom-qty'].forEach(id => document.getElementById(id).value = '');
+    renderCustomItems();
+}
+function removeCustomItem(i) { customItems.splice(i, 1); renderCustomItems(); }
 
 /* ---------- العلب المشكل ---------- */
 function boxOptionsHtml() {
@@ -328,6 +364,11 @@ function renderBoxes() {
                     <select id="bsel-${i}">${opts}</select>
                     <button type="button" class="btn btn-primary" style="padding:8px 12px;" onclick="addBoxItem(${i})">إضافة صنف</button>
                 </div>
+                <div class="box-add-row">
+                    <input type="text" id="bcn-${i}" placeholder="صنف جديد (اسم)">
+                    <input type="number" id="bcp-${i}" min="0" placeholder="سعر الكيلو">
+                    <button type="button" class="btn btn-secondary" style="padding:8px 12px;" onclick="addBoxCustom(${i})">إضافة صنف جديد</button>
+                </div>
                 <p style="margin-top:8px;font-size:13px;color:#6b4226;" id="bsum-${i}">${boxSummaryText(box)}</p>
             </div>`;
     });
@@ -348,6 +389,15 @@ function addBoxItem(i) {
     const it = allItems[parseInt(document.getElementById(`bsel-${i}`).value)];
     if (boxes[i].items.some(x => x.name === it.name)) { alert('الصنف ده موجود في العلبة بالفعل'); return; }
     boxes[i].items.push({ name: it.name, price: it.price });
+    renderBoxes();
+}
+function addBoxCustom(i) {
+    const name = document.getElementById(`bcn-${i}`).value.trim();
+    const price = parseFloat(document.getElementById(`bcp-${i}`).value);
+    if (!name) { alert('اكتب اسم الصنف'); return; }
+    if (!(price > 0)) { alert('اكتب سعر الكيلو'); return; }
+    if (boxes[i].items.some(x => x.name === name)) { alert('الصنف ده موجود في العلبة بالفعل'); return; }
+    boxes[i].items.push({ name: name, price: price });
     renderBoxes();
 }
 
@@ -413,6 +463,12 @@ function calculateInvoice() {
     processItems(menuData.nz, 'nz');
     processItems(menuData.fern, 'fern');
 
+    customItems.forEach(ci => {
+        const t = round2(ci.qty * ci.price);
+        totalPrice += t;
+        items.push({ name: ci.name, qty: ci.qty, price: ci.price, total: t, custom: true });
+    });
+
     for (let i = 0; i < boxes.length; i++) {
         const box = boxes[i];
         if (!(box.weight > 0)) { alert(`اكتب وزن علبة ${i + 1} بالكيلو`); return; }
@@ -433,7 +489,7 @@ function calculateInvoice() {
     }
 
     if (items.length === 0) {
-        alert('برجاء تحديد كمية (كيلو) لصنف واحد على الأقل أو إضافة علبة مشكل');
+        alert('برجاء تحديد كمية (كيلو) لصنف واحد على الأقل أو إضافة علبة مشكل أو صنف جديد');
         return;
     }
     totalPrice = round2(totalPrice);
@@ -463,6 +519,7 @@ function calculateInvoice() {
 function resetForm() {
     ['cust-name', 'cust-phone', 'cust-address', 'cust-delivery', 'order-notes'].forEach(id => document.getElementById(id).value = '');
     boxes = [];
+    customItems = [];
     editingKey = null;
     currentInvoiceData = null;
     initMenu();
@@ -528,6 +585,7 @@ function editOrder(key) {
     document.getElementById('order-notes').value = ord.notes || '';
 
     boxes = [];
+    customItems = [];
     (ord.items || []).forEach(it => {
         if (it.isBox) {
             const bi = boxItemsOf(it);
@@ -537,13 +595,16 @@ function editOrder(key) {
                 items: bi.map(x => ({ name: x.name, price: x.price }))
             });
         } else {
+            let found = false;
             groups.forEach(g => {
                 const idx = menuData[g.key].findIndex(m => m.name === it.name);
-                if (idx >= 0) document.getElementById(`${g.prefix}-${idx}`).value = it.qty;
+                if (idx >= 0) { document.getElementById(`${g.prefix}-${idx}`).value = it.qty; found = true; }
             });
+            if (!found) customItems.push({ name: it.name, price: it.price, qty: it.qty });
         }
     });
     renderBoxes();
+    renderCustomItems();
 
     document.getElementById('edit-banner-text').innerText = `✏️ جاري تعديل أوردر: ${ord.customer.name}`;
     document.getElementById('edit-banner').style.display = 'flex';
@@ -663,7 +724,7 @@ async function loadAggregateSelection() {
         const ord = orders[key];
         html += `
             <div style="margin-bottom: 8px;">
-                <label>
+               <label>
                     <input type="checkbox" class="agg-check" value="${key}">
                     أوردر العميل: <strong>${esc(ord.customer.name)}</strong> - (${ord.totalPrice} ج.م)
                 </label>
